@@ -1,6 +1,4 @@
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
-from rest_framework.relations import SlugRelatedField
 
 from titles.models import (
     Title,
@@ -12,20 +10,30 @@ from titles.models import (
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    pass
+    class Meta:
+        model = Title
+        fields = '__all__'
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    pass
+    class Meta:
+        model = Category
+        fields = '__all__'
 
 
 class GenreSerializer(serializers.ModelSerializer):
-    pass
+    class Meta:
+        model = Genre
+        fields = '__all__'
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    pass
+    class Meta:
+        model = Comment
+        fields = '__all__'
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    pass
+    class Meta:
+        model = Review
+        fields = '__all__'

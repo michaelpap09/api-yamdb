@@ -1,6 +1,5 @@
 from django.shortcuts import render
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from titles.models import (
     Title,
@@ -19,20 +18,48 @@ from .serializers import (
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    pass
+    queryset = Title.objects.all()
+    serializer_class = TitleSerializer
+    permission_classes = ()
+
+    def perform_update(self, serializer):
+        serializer.save(author=self.request.user)
+
+    def perform_destroy(self, instance):
+        instance.delete(author=self.request.user)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    pass
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = ()
+
+    def perform_update(self, serializer):
+        serializer.save(author=self.request.user)
+
+    def perform_destroy(self, instance):
+        instance.delete(author=self.request.user)
 
 
 class GenreViewSet(viewsets.ModelViewSet):
-    pass
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    permission_classes = ()
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
-    pass
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = ()
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    pass
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    permission_classes = ()
+
+    def perform_update(self, serializer):
+        serializer.save(author=self.request.user)
+
+    def perform_destroy(self, instance):
+        instance.delete(author=self.request.user)
