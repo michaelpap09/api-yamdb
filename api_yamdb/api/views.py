@@ -47,7 +47,3 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     pass  # Для Даниила
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    pass  # Для Антона

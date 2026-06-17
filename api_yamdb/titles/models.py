@@ -3,10 +3,6 @@ from django.db import models
 MAX_LENGTH = 255
 
 
-class CustomUser(models.Model):
-    pass  # Для Антона
-
-
 class Category(models.Model):
     name = models.CharField(max_length=MAX_LENGTH)
     slug = models.SlugField(unique=True)
