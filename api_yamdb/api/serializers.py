@@ -24,16 +24,14 @@ class CategorySerializer(serializers.ModelSerializer):
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
-        fields = '__all__'
+        fields = '__all__' 
 
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Comment
-        fields = '__all__'
+        pass  # Для Даниила
 
 
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Review
-        fields = '__all__'
+        pass  # Для Даниила

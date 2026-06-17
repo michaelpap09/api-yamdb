@@ -29,18 +29,6 @@ class TitleViewSet(viewsets.ModelViewSet):
         instance.delete(author=self.request.user)
 
 
-class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
-    permission_classes = ()
-
-    def perform_update(self, serializer):
-        serializer.save(author=self.request.user)
-
-    def perform_destroy(self, instance):
-        instance.delete(author=self.request.user)
-
-
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
@@ -54,12 +42,12 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    queryset = Review.objects.all()
-    serializer_class = ReviewSerializer
-    permission_classes = ()
+    pass  # Для Даниила
 
-    def perform_update(self, serializer):
-        serializer.save(author=self.request.user)
 
-    def perform_destroy(self, instance):
-        instance.delete(author=self.request.user)
+class CommentViewSet(viewsets.ModelViewSet):
+    pass  # Для Даниила
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    pass  # Для Антона
