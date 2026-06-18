@@ -12,8 +12,7 @@ from .views import (
 
 router = DefaultRouter()
 router.register(r'titles', TitleViewset, basename='titles')
-router.register(r'reviews', ReviewViewSet, basename='reviews')
-router.register(r'comments', CommentViewSet, basename='comments')
+
 
 urlpatterns = [
     path('', include(router.urls)),

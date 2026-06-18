@@ -40,11 +40,12 @@ class CommentSerializer(serializers.ModelSerializer):  # / Даниил
         slug_field='username',
         read_only=True
     )
+    pub_date = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Comment
-        fields = ['id', 'text', 'author', 'created_at', 'review']
-        read_only_fields = ['author', 'created_at', 'review']
+        fields = ['id', 'text', 'author', 'pub_date']
+        read_only_fields = ['author', 'pub_date', 'review']
 
 
 class ReviewSerializer(serializers.ModelSerializer):  # / Даниил
@@ -52,26 +53,23 @@ class ReviewSerializer(serializers.ModelSerializer):  # / Даниил
         slug_field='username',
         read_only=True
     )
-    score = serializers.IntegerField()
-
+    score = serializers.IntegerField(min_value=1, max_value=10)
+    pub_date = serializers.DateTimeField(read_only=True)
+    
     class Meta:
         model = Review
-        fields = ['id', 'text', 'author', 'score', 'created_at', 'title']
-        read_only_fields = ['author', 'created_at']
+        fields = ['id', 'text', 'author', 'score', 'pub_date']
+        read_only_fields = ['author', 'pub_date']
 
     def validate(self, data):
         """Проверка: на одно произведение только один отзыв от пользователя"""
         if self.instance is None:
-            title = data.get('title')
-            author = self.context['request'].user
-            if Review.objects.filter(title=title, author=author).exists():
-                raise serializers.ValidationError(
-                    'На одно произведение можно оставить только один отзыв'
-                )
+            title_id = self.context.get('title_id')
+            if title_id:
+                title = Title.objects.get(id=title_id)
+                author = self.context['request'].user
+                if Review.objects.filter(title=title, author=author).exists():
+                    raise serializers.ValidationError(
+                        'На одно произведение можно оставить только один отзыв'
+                    )
         return data
-
-    def validate_score(self, value):
-        """Проверка диапазона оценки от 1 до 10"""
-        if value < 1 or value > 10:
-            raise serializers.ValidationError('Оценка должна быть от 1 до 10')
-        return value
