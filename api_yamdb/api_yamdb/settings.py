@@ -16,9 +16,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'titles.apps.TitleConfig',
+
+    'titles.apps.TitlesConfig',
     'users.apps.UsersConfig',
-    'api.users.ApiConfig',
+    'api.apps.ApiConfig',
+
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
@@ -96,3 +98,5 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
+
+AUTH_USER_MODEL = 'users.User'
