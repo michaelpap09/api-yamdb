@@ -1,19 +1,22 @@
+"""Маршруты API."""
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from django.urls import path, include
+
+from users.views import UserViewSet
 
 from .views import (
-    TitleViewSet,
-    GenreViewSet,
     CategoryViewSet,
+    CommentViewSet,
+    GenreViewSet,
     ReviewViewSet,
-    CommentViewSet
+    TitleViewSet,
 )
 
 router = DefaultRouter()
-router.register(r'titles', TitleViewSet,)
-router.register(r'genre', GenreViewSet,)
-router.register(r'category', CategoryViewSet,)
-router.register(r'users', UserViewSet,)
+router.register(r'titles', TitleViewSet)
+router.register(r'genre', GenreViewSet)
+router.register(r'category', CategoryViewSet)
+router.register(r'users', UserViewSet, basename='users')
 
 urlpatterns = [
     path('', include(router.urls)),
@@ -22,10 +25,11 @@ urlpatterns = [
         ReviewViewSet.as_view(
             {
                 'get': 'list',
-                'post': 'create'
+                'post': 'create',
             }
         ),
-        name='reviews'),
+        name='reviews'
+    ),
     path(
         'titles/<int:title_pk>/reviews/<int:rev_pk>/',
         ReviewViewSet.as_view(
@@ -33,7 +37,7 @@ urlpatterns = [
                 'get': 'retrieve',
                 'delete': 'destroy',
                 'patch': 'partial_update',
-                'put': 'update'
+                'put': 'update',
             }
         ),
     ),
@@ -42,7 +46,7 @@ urlpatterns = [
         CommentViewSet.as_view(
             {
                 'get': 'list',
-                'post': 'create'
+                'post': 'create',
             }
         )
     ),
@@ -53,7 +57,7 @@ urlpatterns = [
                 'get': 'retrieve',
                 'delete': 'destroy',
                 'patch': 'partial_update',
-                'put': 'update'
+                'put': 'update',
             }
         )
     ),
