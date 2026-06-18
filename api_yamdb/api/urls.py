@@ -1,4 +1,3 @@
-"""Маршруты API."""
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
@@ -16,7 +15,7 @@ router = DefaultRouter()
 router.register(r'titles', TitleViewSet)
 router.register(r'genre', GenreViewSet)
 router.register(r'category', CategoryViewSet)
-router.register(r'users', UserViewSet, basename='users')
+router.register(r'users', UserViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
