@@ -1,25 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
 
 MAX_LENGTH = 255
-
-
-class User(AbstractUser):
-    USER = 'user'
-    MODERATOR = 'moderator'
-    ADMIN = 'admin'
-
-    ROLE_CHOICES = (
-        (USER, 'User'),
-        (MODERATOR, 'Moderator'),
-        (ADMIN, 'Admin'),
-    )
-
-    role = models.CharField(
-        max_length=20,
-        choices=ROLE_CHOICES,
-        default=USER
-    )
 
 
 class Category(models.Model):
@@ -39,7 +20,7 @@ class Genre(models.Model):
 
 
 class Review(models.Model):
-    pass  # Для Даниила 
+    pass  # Для Даниила
 
 
 class Comment(models.Model):
