@@ -1,8 +1,9 @@
 """Маршруты API."""
+
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from users.views import UserViewSet
+from users.views import UserViewSet, get_token, signup
 
 from .views import (
     CategoryViewSet,
@@ -19,6 +20,8 @@ router.register(r'category', CategoryViewSet)
 router.register(r'users', UserViewSet, basename='users')
 
 urlpatterns = [
+    path('auth/signup/', signup, name='signup'),
+    path('auth/token/', get_token, name='token'),
     path('', include(router.urls)),
     path(
         'titles/<int:title_pk>/reviews/',
@@ -28,7 +31,7 @@ urlpatterns = [
                 'post': 'create',
             }
         ),
-        name='reviews'
+        name='reviews',
     ),
     path(
         'titles/<int:title_pk>/reviews/<int:rev_pk>/',
@@ -48,7 +51,7 @@ urlpatterns = [
                 'get': 'list',
                 'post': 'create',
             }
-        )
+        ),
     ),
     path(
         'titles/<int:title_pk>/reviews/<int:rev_pk>/comments/<int:com_pk>/',
@@ -59,8 +62,6 @@ urlpatterns = [
                 'patch': 'partial_update',
                 'put': 'update',
             }
-        )
+        ),
     ),
-    path('auth/', include('djoser.urls.authtoken')),
-    path('auth/', include('djoser.urls')),
 ]
