@@ -1,5 +1,3 @@
-"""Маршруты API."""
-
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
@@ -15,9 +13,10 @@ from .views import (
 
 router = DefaultRouter()
 router.register(r'titles', TitleViewSet)
-router.register(r'genre', GenreViewSet)
-router.register(r'category', CategoryViewSet)
+router.register(r'genres', GenreViewSet)
+router.register(r'categories', CategoryViewSet)
 router.register(r'users', UserViewSet, basename='users')
+
 
 urlpatterns = [
     path('auth/signup/', signup, name='signup'),
@@ -40,7 +39,6 @@ urlpatterns = [
                 'get': 'retrieve',
                 'delete': 'destroy',
                 'patch': 'partial_update',
-                'put': 'update',
             }
         ),
     ),
@@ -60,7 +58,6 @@ urlpatterns = [
                 'get': 'retrieve',
                 'delete': 'destroy',
                 'patch': 'partial_update',
-                'put': 'update',
             }
         ),
     ),

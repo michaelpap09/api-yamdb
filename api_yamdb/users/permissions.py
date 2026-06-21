@@ -1,13 +1,8 @@
-"""Права доступа для пользователей и контента."""
-
 from rest_framework import permissions
 
 
 class IsAdmin(permissions.BasePermission):
-    """Разрешает доступ только администраторам."""
-
     def has_permission(self, request, view):
-        """Проверяет, что пользователь аутентифицирован и является админом."""
         return (
             request.user.is_authenticated
             and request.user.is_admin
@@ -15,10 +10,7 @@ class IsAdmin(permissions.BasePermission):
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
-    """Разрешает чтение всем, а изменение только администраторам."""
-
     def has_permission(self, request, view):
-        """Проверяет права для безопасных и небезопасных запросов."""
         return (
             request.method in permissions.SAFE_METHODS
             or (
@@ -29,10 +21,13 @@ class IsAdminOrReadOnly(permissions.BasePermission):
 
 
 class IsAuthorModeratorAdminOrReadOnly(permissions.BasePermission):
-    """Разрешает изменение автору, модератору или администратору."""
+    def has_permission(self, request, view):
+        return (
+            request.method in permissions.SAFE_METHODS
+            or request.user.is_authenticated
+        )
 
     def has_object_permission(self, request, view, obj):
-        """Проверяет права доступа к конкретному объекту."""
         return (
             request.method in permissions.SAFE_METHODS
             or (
