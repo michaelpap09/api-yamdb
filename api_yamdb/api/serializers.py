@@ -3,7 +3,11 @@ from datetime import date
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
-from titles.models import Category, Comment, Genre, Review, Title
+from reviews.models import Comment, Review
+from titles.models import Category, Genre, Title
+
+MIN_SCORE = 1
+MAX_SCORE = 10
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -54,7 +58,7 @@ class TitleSerializer(serializers.ModelSerializer):
     def validate_year(self, value):
         if value > date.today().year:
             raise serializers.ValidationError(
-                'The release year cannot be in the future.'
+                'Год выпуска не может быть в будущем.'
             )
         return value
 
@@ -77,7 +81,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         slug_field='username',
         read_only=True,
     )
-    score = serializers.IntegerField(min_value=1, max_value=10)
+    score = serializers.IntegerField(min_value=MIN_SCORE, max_value=MAX_SCORE)
     pub_date = serializers.DateTimeField(source='created_at', read_only=True)
 
     class Meta:
@@ -91,6 +95,6 @@ class ReviewSerializer(serializers.ModelSerializer):
             author = self.context['request'].user
             if Review.objects.filter(title=title, author=author).exists():
                 raise serializers.ValidationError(
-                    'Only one review per title is allowed.'
+                    'Только один отзыв разрешен.'
                 )
         return data

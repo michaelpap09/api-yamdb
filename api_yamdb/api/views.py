@@ -1,12 +1,12 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, viewsets
 
-from titles.models import Category, Genre, Review, Title
+from reviews.models import Review
+from titles.models import Category, Genre, Title
 from users.permissions import (
     IsAdminOrReadOnly,
     IsAuthorModeratorAdminOrReadOnly
 )
-
 from .serializers import (
     CategorySerializer,
     CommentSerializer,
@@ -26,7 +26,6 @@ class CreateListDestroyViewSet(
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
     serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
     http_method_names = ('get', 'post', 'patch', 'delete', 'head', 'options')

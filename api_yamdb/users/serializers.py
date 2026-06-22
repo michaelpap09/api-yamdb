@@ -3,16 +3,36 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
+
+EMAIL_MAX_LENGTH = 254
+USERNAME_MAX_LENGTH = 150
 
 User = get_user_model()
+
+
+def validate_username_not_me(value):
+    """Проверяет, что username не равен me."""
+    if value == 'me':
+        raise serializers.ValidationError(
+            'Нельзя использовать username "me".'
+        )
+    return value
 
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для модели пользователя."""
 
-    class Meta:
-        """Настройки сериализатора пользователя."""
+    username = serializers.CharField(
+        max_length=USERNAME_MAX_LENGTH,
+        validators=(
+            UnicodeUsernameValidator(),
+            validate_username_not_me,
+            UniqueValidator(queryset=User.objects.all()),
+        ),
+    )
 
+    class Meta:
         model = User
         fields = (
             'username',
@@ -22,14 +42,6 @@ class UserSerializer(serializers.ModelSerializer):
             'bio',
             'role',
         )
-
-    def validate_username(self, value):
-        """Проверяет, что username не равен me."""
-        if value == 'me':
-            raise serializers.ValidationError(
-                'Нельзя использовать username "me".'
-            )
-        return value
 
 
 class UserMeSerializer(UserSerializer):
@@ -45,10 +57,10 @@ class SignupSerializer(serializers.Serializer):
     """Сериализатор для регистрации пользователя."""
 
     username = serializers.CharField(
-        max_length=150,
+        max_length=USERNAME_MAX_LENGTH,
         validators=(UnicodeUsernameValidator(),),
     )
-    email = serializers.EmailField(max_length=254)
+    email = serializers.EmailField(max_length=EMAIL_MAX_LENGTH)
 
     def validate_username(self, value):
         """Проверяет, что username не равен me."""
@@ -82,5 +94,5 @@ class SignupSerializer(serializers.Serializer):
 class TokenSerializer(serializers.Serializer):
     """Сериализатор для получения JWT-токена."""
 
-    username = serializers.CharField(max_length=150)
+    username = serializers.CharField(max_length=USERNAME_MAX_LENGTH)
     confirmation_code = serializers.CharField()

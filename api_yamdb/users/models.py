@@ -18,30 +18,32 @@ class User(AbstractUser):
     )
 
     email = models.EmailField(
-        'email',
         max_length=254,
         unique=True,
+        verbose_name='Адрес электронной почты',
     )
     bio = models.TextField(
-        'Биография',
         blank=True,
+        verbose_name='Биография',
     )
     role = models.CharField(
-        'Роль',
         max_length=20,
         choices=ROLE_CHOICES,
         default=USER,
+        verbose_name='Роль',
     )
     confirmation_code = models.CharField(
-        'Код подтверждения',
         max_length=255,
         blank=True,
+        verbose_name='Код подтверждения',
     )
 
     class Meta:
         """Настройки модели пользователя."""
 
         ordering = ('id',)
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
 
     @property
     def is_admin(self):

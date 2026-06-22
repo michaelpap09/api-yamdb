@@ -7,7 +7,7 @@ from users.models import User
 
 
 @admin.register(User)
-class CustomUserAdmin(UserAdmin):
+class UserAdmin(UserAdmin):
     """Настройки отображения кастомной модели пользователя в админке."""
 
     list_display = (
