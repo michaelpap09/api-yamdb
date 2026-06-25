@@ -13,6 +13,62 @@ from titles.models import Category, Genre, Title
 User = get_user_model()
 
 
+IMPORT_CONFIG = (
+    {
+        'filename': 'users.csv',
+        'model': User,
+        'fields': (
+            'id', 'username', 'email', 'role',
+            'bio', 'first_name', 'last_name',
+        ),
+        'int_fields': ('id',),
+    },
+    {
+        'filename': 'category.csv',
+        'model': Category,
+        'fields': ('id', 'name', 'slug'),
+        'int_fields': ('id',),
+    },
+    {
+        'filename': 'genre.csv',
+        'model': Genre,
+        'fields': ('id', 'name', 'slug'),
+        'int_fields': ('id',),
+    },
+    {
+        'filename': 'titles.csv',
+        'model': Title,
+        'fields': ('id', 'name', 'year', 'category'),
+        'int_fields': ('id', 'year', 'category'),
+        'rename_fields': {'category': 'category_id'},
+    },
+    {
+        'filename': 'genre_title.csv',
+        'model_getter': lambda: Title.genre.through,
+        'fields': ('id', 'title_id', 'genre_id'),
+        'int_fields': ('id', 'title_id', 'genre_id'),
+    },
+    {
+        'filename': 'review.csv',
+        'model': Review,
+        'fields': ('id', 'title_id', 'text', 'author', 'score', 'pub_date'),
+        'int_fields': ('id', 'title_id', 'author', 'score'),
+        'rename_fields': {'author': 'author_id'},
+        'date_field': 'created_at',
+        'csv_date_field': 'pub_date',
+    },
+    {
+        'filename': 'comments.csv',
+        'model': Comment,
+        'fields': ('id', 'review_id', 'text', 'author', 'pub_date'),
+        'int_fields': ('id', 'review_id', 'author'),
+        'rename_fields': {'author': 'author_id'},
+        'date_field': 'created_at',
+        'csv_date_field': 'pub_date',
+    },
+)
+
+
 class Command(BaseCommand):
     help = 'Imports demo data from CSV files.'
 
@@ -27,187 +83,105 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
         self.data_dir = options['data_dir'].resolve()
+
         if not self.data_dir.is_dir():
-            raise CommandError(
-                f'Data directory not found: {self.data_dir}'
-            )
+            raise CommandError(f'Data directory not found: {self.data_dir}')
 
-        loaders = (
-            ('users.csv', self.load_users),
-            ('category.csv', self.load_categories),
-            ('genre.csv', self.load_genres),
-            ('titles.csv', self.load_titles),
-            ('genre_title.csv', self.load_title_genres),
-            ('review.csv', self.load_reviews),
-            ('comments.csv', self.load_comments),
-        )
-
-        for filename, loader in loaders:
+        for config in IMPORT_CONFIG:
+            filename = config['filename']
             try:
-                count = loader(filename)
+                count = self.load_model_data(config)
             except (DatabaseError, KeyError, TypeError, ValueError) as error:
                 raise CommandError(
                     f'Failed to import {filename}: {error}'
                 ) from error
+
             self.stdout.write(f'{filename}: processed {count} rows')
 
         self.stdout.write(self.style.SUCCESS('CSV import completed.'))
 
+    def load_model_data(self, config):
+        filename = config['filename']
+        model = config.get('model') or config['model_getter']()
+        fields = config['fields']
+
+        count = 0
+
+        for line_number, row in self.read_rows(filename, fields):
+            try:
+                data = self.prepare_row(row, config)
+
+                obj, created = model.objects.update_or_create(
+                    id=data.pop('id'),
+                    defaults=data,
+                )
+
+                if model is User and created:
+                    obj.set_unusable_password()
+                    obj.save(update_fields=('password',))
+
+                if 'date_field' in config:
+                    model.objects.filter(pk=obj.pk).update(
+                        **{
+                            config['date_field']: self.parse_date(
+                                row[config['csv_date_field']]
+                            )
+                        }
+                    )
+
+            except (DatabaseError, TypeError, ValueError) as error:
+                self.raise_row_error(filename, line_number, error)
+
+            count += 1
+
+        return count
+
+    def prepare_row(self, row, config):
+        rename_fields = config.get('rename_fields', {})
+        int_fields = config.get('int_fields', ())
+        skip_fields = {config.get('csv_date_field')}
+
+        data = {}
+
+        for field in config['fields']:
+            if field in skip_fields:
+                continue
+
+            value = row[field]
+
+            if field in int_fields:
+                value = int(value)
+
+            model_field = rename_fields.get(field, field)
+            data[model_field] = value
+
+        return data
+
     def read_rows(self, filename, required_fields):
         path = self.data_dir / filename
+
         if not path.is_file():
             raise CommandError(f'File not found: {path}')
 
         with path.open(encoding='utf-8-sig', newline='') as csv_file:
             reader = csv.DictReader(csv_file)
             missing = set(required_fields) - set(reader.fieldnames or ())
+
             if missing:
                 fields = ', '.join(sorted(missing))
                 raise CommandError(
                     f'{filename} is missing columns: {fields}'
                 )
+
             yield from enumerate(reader, start=2)
-
-    def load_users(self, filename):
-        fields = (
-            'id', 'username', 'email', 'role', 'bio', 'first_name',
-            'last_name',
-        )
-        count = 0
-        for line_number, row in self.read_rows(filename, fields):
-            try:
-                user, created = User.objects.update_or_create(
-                    id=int(row['id']),
-                    defaults={
-                        'username': row['username'],
-                        'email': row['email'],
-                        'role': row['role'],
-                        'bio': row['bio'],
-                        'first_name': row['first_name'],
-                        'last_name': row['last_name'],
-                    },
-                )
-                if created:
-                    user.set_unusable_password()
-                    user.save(update_fields=('password',))
-            except (DatabaseError, TypeError, ValueError) as error:
-                self.raise_row_error(filename, line_number, error)
-            count += 1
-        return count
-
-    def load_categories(self, filename):
-        return self.load_named_models(filename, Category)
-
-    def load_genres(self, filename):
-        return self.load_named_models(filename, Genre)
-
-    def load_named_models(self, filename, model):
-        count = 0
-        for line_number, row in self.read_rows(
-            filename,
-            ('id', 'name', 'slug'),
-        ):
-            try:
-                model.objects.update_or_create(
-                    id=int(row['id']),
-                    defaults={
-                        'name': row['name'],
-                        'slug': row['slug'],
-                    },
-                )
-            except (DatabaseError, TypeError, ValueError) as error:
-                self.raise_row_error(filename, line_number, error)
-            count += 1
-        return count
-
-    def load_titles(self, filename):
-        count = 0
-        for line_number, row in self.read_rows(
-            filename,
-            ('id', 'name', 'year', 'category'),
-        ):
-            try:
-                Title.objects.update_or_create(
-                    id=int(row['id']),
-                    defaults={
-                        'name': row['name'],
-                        'year': int(row['year']),
-                        'category_id': int(row['category']),
-                    },
-                )
-            except (DatabaseError, TypeError, ValueError) as error:
-                self.raise_row_error(filename, line_number, error)
-            count += 1
-        return count
-
-    def load_title_genres(self, filename):
-        through_model = Title.genre.through
-        count = 0
-        for line_number, row in self.read_rows(
-            filename,
-            ('id', 'title_id', 'genre_id'),
-        ):
-            try:
-                through_model.objects.update_or_create(
-                    id=int(row['id']),
-                    defaults={
-                        'title_id': int(row['title_id']),
-                        'genre_id': int(row['genre_id']),
-                    },
-                )
-            except (DatabaseError, TypeError, ValueError) as error:
-                self.raise_row_error(filename, line_number, error)
-            count += 1
-        return count
-
-    def load_reviews(self, filename):
-        fields = ('id', 'title_id', 'text', 'author', 'score', 'pub_date')
-        count = 0
-        for line_number, row in self.read_rows(filename, fields):
-            try:
-                review, _ = Review.objects.update_or_create(
-                    id=int(row['id']),
-                    defaults={
-                        'title_id': int(row['title_id']),
-                        'text': row['text'],
-                        'author_id': int(row['author']),
-                        'score': int(row['score']),
-                    },
-                )
-                Review.objects.filter(pk=review.pk).update(
-                    created_at=self.parse_date(row['pub_date']),
-                )
-            except (DatabaseError, TypeError, ValueError) as error:
-                self.raise_row_error(filename, line_number, error)
-            count += 1
-        return count
-
-    def load_comments(self, filename):
-        fields = ('id', 'review_id', 'text', 'author', 'pub_date')
-        count = 0
-        for line_number, row in self.read_rows(filename, fields):
-            try:
-                comment, _ = Comment.objects.update_or_create(
-                    id=int(row['id']),
-                    defaults={
-                        'review_id': int(row['review_id']),
-                        'text': row['text'],
-                        'author_id': int(row['author']),
-                    },
-                )
-                Comment.objects.filter(pk=comment.pk).update(
-                    created_at=self.parse_date(row['pub_date']),
-                )
-            except (DatabaseError, TypeError, ValueError) as error:
-                self.raise_row_error(filename, line_number, error)
-            count += 1
-        return count
 
     @staticmethod
     def parse_date(value):
         parsed = parse_datetime(value)
+
         if parsed is None:
             raise ValueError(f'invalid date: {value}')
+
         return parsed
 
     @staticmethod

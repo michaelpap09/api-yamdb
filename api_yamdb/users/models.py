@@ -3,6 +3,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+MAX_LENGTH = 150
+
 
 class User(AbstractUser):
     """Кастомная модель пользователя с ролями и кодом подтверждения."""
@@ -18,7 +20,7 @@ class User(AbstractUser):
     )
 
     email = models.EmailField(
-        max_length=254,
+        max_length=MAX_LENGTH,
         unique=True,
         verbose_name='Адрес электронной почты',
     )
@@ -27,13 +29,13 @@ class User(AbstractUser):
         verbose_name='Биография',
     )
     role = models.CharField(
-        max_length=20,
+        max_length=MAX_LENGTH,
         choices=ROLE_CHOICES,
         default=USER,
         verbose_name='Роль',
     )
     confirmation_code = models.CharField(
-        max_length=255,
+        max_length=MAX_LENGTH,
         blank=True,
         verbose_name='Код подтверждения',
     )
